@@ -1,0 +1,157 @@
+/* Navigation */
+.nav-ul {
+  padding: 5px;
+  margin: 0px;
+  background-color: #3d88c7; /* Blue */
+}
+
+.nav-ul li {
+  display: inline-block;
+  padding: 10px;
+}
+
+.nav-ul li a {
+  color: #fff;
+  text-decoration: none;
+  padding: 5px;
+  background-color: #e95f5f; /* Reddish-pink */
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.nav-ul li a:hover {
+  background-color: #d9534f; /* Darker red on hover */
+}
+
+/* Footer */
+.footer {
+  position: absolute;
+  bottom: 0;
+  background-color: #3d88c7; /* Blue */
+  width: 100%;
+  text-align: center;
+}
+
+/* Header */
+.App-header {
+  background-color: #323232; /* Dark gray */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: #fff;
+}
+
+/* Link */
+.App-link {
+  color: #e95f5f; /* Reddish-pink */
+}
+
+/* Registration and Product */
+.register, .product {
+  margin-left: 30%;
+}
+
+/* Login */
+.login {
+  margin-left: 30%;
+  margin-top: 100px;
+}
+
+/* Input Box */
+.inputBox {
+  padding: 7px;
+  display: block;
+  border: 1px solid #3d88c7; /* Blue border color */
+  width: 300px;
+  margin: 20px;
+}
+
+/* App Button */
+.appButton {
+  margin: 20px;
+  width: 150px;
+  padding: 10px;
+  background-color: #e95f5f; /* Reddish-pink button color */
+  border: solid 1px #d9534f; /* Darker red border color */
+  cursor: pointer;
+  color: #fff;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.appButton:hover {
+  background-color: #d9534f; /* Darker red on hover */
+}
+
+/* Navigation Right */
+.nav-right {
+  text-align: right;
+}
+
+/* Logo */
+.logo {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  float: left;
+  margin-top: 3px;
+  margin-left: 10px;
+}
+
+/* Invalid Input */
+.invalid-input {
+  display: block;
+  color: #d9534f; /* Darker red */
+  margin-top: -20px;
+  margin-left: 20px;
+}
+
+/* Product List */
+.product-list {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.product-list ul li {
+  display: inline-block;
+  width: 150px;
+  border: 1px solid #3d88c7; /* Blue border color */
+  padding: 5px;
+  background-color: #ffefc6; /* Yellowish background color */
+  margin: 5px;
+}
+
+.product-list ul {
+  margin: 0;
+}
+
+/* Search Product Box */
+.search-product-box {
+  width: 400px;
+  margin: 20px;
+  height: 38px;
+  padding-left: 30px;
+  border: solid 1px #3d88c7; /* Blue border color */
+  background-color: #fff; /* White background color */
+  border-radius: 5px;
+}
+
+/* App Logo Animation */
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
