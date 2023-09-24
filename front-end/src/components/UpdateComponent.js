@@ -33,7 +33,8 @@ const UpdateProduct = () => {
             method: 'Put',
             body: JSON.stringify({ name, price, category, company }),
             headers: {
-                'Content-Type': 'Application/json'
+                'Content-Type': 'Application/json',
+                  authorization: `bearer ${JSON.parse(localStorage.getItem('token'))}`
             }
         });
         result = await result.json();
