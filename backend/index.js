@@ -10,115 +10,153 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.post("/register", async (req, resp) => {
-    let user = new User(req.body);
-    let result = await user.save();
-    result = result.toObject();
-    delete result.password
-    Jwt.sign({result}, jwtKey, {expiresIn:"2h"},(err,token)=>{
-        if(err){
-            resp.send("Something went wrong")  
-        }
-        resp.send({result,auth:token})
-    })
-})
-
-app.post("/login", async (req, resp) => {
-    if (req.body.password && req.body.email) {
-        let user = await User.findOne(req.body).select("-password");
-        if (user) {
-            Jwt.sign({user}, jwtKey, {expiresIn:"2h"},(err,token)=>{
-                if(err){
-                    resp.send("Something went wrong")  
-                }
-                resp.send({user,auth:token})
-            })
-        } else {
-            resp.send({ result: "No User found" })
-        }
-    } else {
-        resp.send({ result: "No User found" })
+// Middleware to authenticate requests
+const authenticate = (req, res, next) => {
+    const token = req.header("Authorization");
+    if (!token) {
+        return res.status(401).json({ error: "Unauthorized" });
     }
-});
 
-app.post("/add-product", async (req, resp) => {
-    let product = new Product(req.body);
-    let result = await product.save();
-    resp.send(result);
-});
-
-app.get("/products", async (req, resp) => {
-    const products = await Product.find();
-    if (products.length > 0) {
-        resp.send(products)
-    } else {
-        resp.send({ result: "No Product found" })
-    }
-});
-
-app.delete("/product/:id", async (req, resp) => {
-    let result = await Product.deleteOne({ _id: req.params.id });
-    resp.send(result)
-}),
-
-    app.get("/product/:id", async (req, resp) => {
-        let result = await Product.findOne({ _id: req.params.id })
-        if (result) {
-            resp.send(result)
-        } else {
-            resp.send({ "result": "No Record Found." })
+    Jwt.verify(token, jwtKey, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: "Invalid token" });
         }
-    })
-
-app.put("/product/:id", async (req, resp) => {
-    let result = await Product.updateOne(
-        { _id: req.params.id },
-        { $set: req.body }
-    )
-    resp.send(result)
-});
-
-app.put("/product/:id", async (req, resp) => {
-    let result = await Product.updateOne(
-        { _id: req.params.id },
-        { $set: req.body }
-    )
-    resp.send(result)
-});
-
-app.get("/search/:key", async (req, resp) => {
-    let result = await Product.find({
-        "$or": [
-            {
-                name: { $regex: req.params.key }  
-            },
-            {
-                company: { $regex: req.params.key }
-            },
-            {
-                category: { $regex: req.params.key }
-            }
-        ]
+        req.user = user;
+        next();
     });
-    resp.send(result);
+};
+
+// Register a new user
+app.post("/register", async (req, resp) => {
+    try {
+        let user = new User(req.body);
+        let result = await user.save();
+        result = result.toObject();
+        delete result.password;
+        resp.json({ result });
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
 });
 
-
-app.get("/profile/:id",  async (req, res) => {
+// Login and get an authentication token
+app.post("/login", async (req, resp) => {
     try {
-   
-      const user = await User.findOne().select("-password");
-  
-      if (user) {
-        res.json(user);
-      } else {
-        res.status(404).json({ message: "User not found" });
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).json({ error: "Failed to fetch user profile" });
+        if (req.body.password && req.body.email) {
+            let user = await User.findOne(req.body).select("-password");
+            if (user) {
+                Jwt.sign({ user }, jwtKey, { expiresIn: "2h" }, (err, token) => {
+                    if (err) {
+                        resp.status(500).json({ error: "Something went wrong" });
+                    }
+                    resp.json({ user, auth: token });
+                });
+            } else {
+                resp.status(404).json({ error: "No User found" });
+            }
+        } else {
+            resp.status(400).json({ error: "Missing email or password" });
+        }
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
     }
-  });
+});
 
+// Add a product (requires authentication)
+app.post("/add-product", authenticate, async (req, resp) => {
+    try {
+        const product = new Product(req.body);
+        const result = await product.save();
+        resp.json(result);
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
 
-app.listen(5000);
+// Get products (public)
+app.get("/products",authenticate, async (req, resp) => {
+    try {
+        const products = await Product.find();
+        resp.json(products);
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+// Delete a product (requires authentication)
+app.delete("/product/:id", authenticate, async (req, resp) => {
+    try {
+        const result = await Product.deleteOne({ _id: req.params.id });
+        resp.json(result);
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+// Get a product by ID (public)
+app.get("/product/:id", async (req, resp) => {
+    try {
+        const result = await Product.findOne({ _id: req.params.id });
+        if (result) {
+            resp.json(result);
+        } else {
+            resp.status(404).json({ error: "No Record Found." });
+        }
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+// Update a product (requires authentication)
+app.put("/product/:id", authenticate, async (req, resp) => {
+    try {
+        const result = await Product.updateOne(
+            { _id: req.params.id },
+            { $set: req.body }
+        );
+        resp.json(result);
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+// Search for products by keyword (public)
+app.get("/search/:key", async (req, resp) => {
+    try {
+        const result = await Product.find({
+            "$or": [
+                {
+                    name: { $regex: req.params.key }
+                },
+                {
+                    company: { $regex: req.params.key }
+                },
+                {
+                    category: { $regex: req.params.key }
+                }
+            ]
+        });
+        resp.json(result);
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+// Define a route to get the user's profile (requires authentication)
+app.get("/profile", authenticate, async (req, resp) => {
+    try {
+        // Retrieve the user's profile based on their ID from the JWT token
+        const user = await User.findById(req.user.user._id).select("-password");
+        if (user) {
+            resp.json(user);
+        } else {
+            resp.status(404).json({ error: "User not found" });
+        }
+    } catch (err) {
+        resp.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+app.listen(5000, () => {
+    console.log("Server is running on port 5000");
+});
