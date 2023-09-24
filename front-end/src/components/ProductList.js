@@ -10,7 +10,7 @@ const ProductList = () => {
     const getProducts = async () => {
         let result = await fetch('https://e-dashboard-uuzl.onrender.com/products',{
             headers:{
-                authorization:JSON.parse(localStorage.getItem('token'))
+                authorization: `bearer ${JSON.parse(localStorage.getItem('token'))}`
             }
         });
         result = await result.json();
@@ -20,7 +20,10 @@ const ProductList = () => {
     const deleteProduct = async (id) => {
         console.warn(id)
         let result = await fetch(`https://e-dashboard-uuzl.onrender.com/product/${id}`, {
-            method: "Delete"
+            method: "Delete",
+             headers:{
+                authorization:`bearer ${JSON.parse(localStorage.getItem('token'))}`
+            }
         });
         result = await result.json();
         if (result) {
@@ -31,7 +34,11 @@ const ProductList = () => {
     const searchHandle = async (event)=>{
         let key = event.target.value;
         if(key){
-            let result = await fetch(`https://e-dashboard-uuzl.onrender.com/search/${key}`);
+            let result = await fetch(`https://e-dashboard-uuzl.onrender.com/search/${key}`,{
+                headers:{
+                    authorization:`bearer ${JSON.parse(localStorage.getItem('token'))}`
+                }
+            });
             result = await result.json()
             if(result){
                 setProducts(result)
