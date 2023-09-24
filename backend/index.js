@@ -41,27 +41,46 @@ app.post("/login", async (req, resp) => {
     }
 });
 
-app.post("/add-product", async (req, resp) => {
-    let product = new Product(req.body);
-    let result = await product.save();
-    resp.send(result);
-});
+app.post("/add-product", verifyToken, async (req, resp) => {
+    try {
+        const token = req.headers['authorization'].split(' ')[1];
+        const decodedToken = Jwt.verify(token, jwtKey);
+        const userId = decodedToken.result._id; // Assuming "_id" is the user's unique identifier
 
-app.get("/products", async (req, resp) => {
-    const products = await Product.find();
-    if (products.length > 0) {
-        resp.send(products)
-    } else {
-        resp.send({ result: "No Product found" })
+        // Now, you can use `userId` to associate the product with the authenticated user.
+        const product = new Product({ ...req.body, userId });
+        const result = await product.save();
+        resp.send(result);
+    } catch (error) {
+        console.error("Error adding product:", error);
+        resp.status(500).json({ error: "Failed to add product" });
     }
 });
 
-app.delete("/product/:id", async (req, resp) => {
+app.get("/products", verifyToken, async (req, resp) => {
+    try {
+        const token = req.headers['authorization'].split(' ')[1];
+        const decodedToken = Jwt.verify(token, jwtKey);
+        const userId = decodedToken.result._id;
+
+        const products = await Product.find({ userId }); // Fetch products associated with the authenticated user
+        if (products.length > 0) {
+            resp.send(products)
+        } else {
+            resp.send({ result: "No Product found" })
+        }
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        resp.status(500).json({ error: "Failed to fetch products" });
+    }
+});
+
+app.delete("/product/:id",verifyToken ,async (req, resp) => {
     let result = await Product.deleteOne({ _id: req.params.id });
     resp.send(result)
 }),
 
-    app.get("/product/:id", async (req, resp) => {
+    app.get("/product/:id",verifyToken ,async (req, resp) => {
         let result = await Product.findOne({ _id: req.params.id })
         if (result) {
             resp.send(result)
@@ -70,7 +89,7 @@ app.delete("/product/:id", async (req, resp) => {
         }
     })
 
-app.put("/product/:id", async (req, resp) => {
+app.put("/product/:id", verifyToken,async (req, resp) => {
     let result = await Product.updateOne(
         { _id: req.params.id },
         { $set: req.body }
@@ -78,7 +97,7 @@ app.put("/product/:id", async (req, resp) => {
     resp.send(result)
 });
 
-app.put("/product/:id", async (req, resp) => {
+app.put("/product/:id",verifyToken ,async (req, resp) => {
     let result = await Product.updateOne(
         { _id: req.params.id },
         { $set: req.body }
@@ -86,7 +105,7 @@ app.put("/product/:id", async (req, resp) => {
     resp.send(result)
 });
 
-app.get("/search/:key", async (req, resp) => {
+app.get("/search/:key",verifyToken,async (req, resp) => {
     let result = await Product.find({
         "$or": [
             {
@@ -104,7 +123,7 @@ app.get("/search/:key", async (req, resp) => {
 });
 
 
-app.get("/profile/:id",  async (req, res) => {
+app.get("/profile/:id",verifyToken , async (req, res) => {
     try {
    
       const user = await User.findOne().select("-password");
@@ -120,6 +139,23 @@ app.get("/profile/:id",  async (req, res) => {
     }
   });
 
-  
+  function verifyToken(req,resp,next){
+let token=req.headers['authorization'];
+if(token){
+    token=token.split(' ')[1];
+ Jwt.verify(token,jwtKey,(err,valid)=>{
+    if(err){
+        resp.send({result:"please provide valid token"})
+    }
+    else{
+        next();
+    }
+ })
+}
+else{
+    resp.send({result:"please add token with headers"})
+}
+  }
+
 
 app.listen(5000);
