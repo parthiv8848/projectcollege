@@ -45,7 +45,7 @@ app.post("/add-product", verifyToken, async (req, resp) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         const decodedToken = Jwt.verify(token, jwtKey);
-        const userId = decodedToken.result._id; // Assuming "_id" is the user's unique identifier
+        const userId = decodedToken.user._id; // Assuming "_id" is the user's unique identifier
 
         // Now, you can use `userId` to associate the product with the authenticated user.
         const product = new Product({ ...req.body, userId });
@@ -61,7 +61,9 @@ app.get("/products", verifyToken, async (req, resp) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         const decodedToken = Jwt.verify(token, jwtKey);
-        const userId = decodedToken.result._id;
+        console.log("Decoded Token:", decodedToken);
+
+        const userId = decodedToken.user._id; // Ensure you use decodedToken.user._id
 
         const products = await Product.find({ userId }); // Fetch products associated with the authenticated user
         if (products.length > 0) {
@@ -122,22 +124,6 @@ app.get("/search/:key",verifyToken,async (req, resp) => {
     resp.send(result);
 });
 
-
-app.get("/profile/:id",verifyToken , async (req, res) => {
-    try {
-   
-      const user = await User.findOne().select("-password");
-  
-      if (user) {
-        res.json(user);
-      } else {
-        res.status(404).json({ message: "User not found" });
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).json({ error: "Failed to fetch user profile" });
-    }
-  });
 
   function verifyToken(req,resp,next){
 let token=req.headers['authorization'];
