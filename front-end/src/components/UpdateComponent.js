@@ -15,7 +15,11 @@ const UpdateProduct = () => {
 
     const getProductDetails = async () => {
         console.warn(params)
-        let result = await fetch(`https://e-dashboard-uuzl.onrender.com/product/${params.id}`);
+        let result = await fetch(`https://e-dashboard-uuzl.onrender.com/product/${params.id}`,{
+                    headers: {
+                        authorization: `bearer ${JSON.parse(localStorage.getItem('token'))}`
+                    }
+                });
         result = await result.json();
         setName(result.name);
         setPrice(result.price);
