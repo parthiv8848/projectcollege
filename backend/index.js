@@ -19,6 +19,7 @@ app.post("/register", async (req, resp) => {
         if(err){
             resp.send("Something went wrong")  
         }
+        console.log(" Token:", token);
         resp.send({result,auth:token})
     })
 })
@@ -31,6 +32,8 @@ app.post("/login", async (req, resp) => {
                 if(err){
                     resp.send("Something went wrong")  
                 }
+
+                console.log(" Token:", token);
                 resp.send({user,auth:token})
             })
         } else {
@@ -45,7 +48,8 @@ app.post("/add-product", verifyToken, async (req, resp) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         const decodedToken = Jwt.verify(token, jwtKey);
-        const userId = decodedToken.user._id; // Assuming "_id" is the user's unique identifier
+
+        const userId = decodedToken.result._id || decodedToken.user._id; // Assuming "_id" is the user's unique identifier
 
         // Now, you can use `userId` to associate the product with the authenticated user.
         const product = new Product({ ...req.body, userId });
@@ -63,19 +67,24 @@ app.get("/products", verifyToken, async (req, resp) => {
         const decodedToken = Jwt.verify(token, jwtKey);
         console.log("Decoded Token:", decodedToken);
 
-        const userId = decodedToken.user._id; // Ensure you use decodedToken.user._id
+        // Use the appropriate property based on the payload structure
+        const userId = decodedToken.result ? decodedToken.result._id : decodedToken.user._id;
+        console.log("UserId:", userId);
 
-        const products = await Product.find({ userId }); // Fetch products associated with the authenticated user
+        const products = await Product.find({ userId });
+        console.log("Products:", products);
+
         if (products.length > 0) {
-            resp.send(products)
+            resp.send(products);
         } else {
-            resp.send({ result: "No Product found" })
+            resp.send({ result: "No Product found" });
         }
     } catch (error) {
         console.error("Error fetching products:", error);
         resp.status(500).json({ error: "Failed to fetch products" });
     }
 });
+
 
 app.delete("/product/:id",verifyToken ,async (req, resp) => {
     let result = await Product.deleteOne({ _id: req.params.id });
@@ -125,23 +134,25 @@ app.get("/search/:key",verifyToken,async (req, resp) => {
 });
 
 
-  function verifyToken(req,resp,next){
-let token=req.headers['authorization'];
-if(token){
-    token=token.split(' ')[1];
- Jwt.verify(token,jwtKey,(err,valid)=>{
-    if(err){
-        resp.send({result:"please provide valid token"})
+function verifyToken(req, resp, next) {
+    let token = req.headers['authorization'];
+    if (token) {
+        token = token.split(' ')[1];
+        Jwt.verify(token, jwtKey, (err, decodedToken) => {
+            if (err) {
+                resp.send({ result: "please provide valid token" });
+            } else {
+                // Use the appropriate property based on the payload structure
+                const userId = decodedToken.result ? decodedToken.result._id : decodedToken.user._id;
+                req.userId = userId; // Attach userId to the request for later use
+                next();
+            }
+        });
+    } else {
+        resp.send({ result: "please add token with headers" });
     }
-    else{
-        next();
-    }
- })
 }
-else{
-    resp.send({result:"please add token with headers"})
-}
-  }
+
 
 
 app.listen(5000);
