@@ -48,8 +48,11 @@ app.post("/add-product", verifyToken, async (req, resp) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         const decodedToken = Jwt.verify(token, jwtKey);
+        console.log("Decoded Token:", decodedToken);
 
-        const userId = decodedToken.result._id || decodedToken.user._id; // Assuming "_id" is the user's unique identifier
+        // Use the appropriate property based on the payload structure
+        const userId = decodedToken.result ? decodedToken.result._id : decodedToken.user._id;
+        console.log("UserId:", userId);
 
         // Now, you can use `userId` to associate the product with the authenticated user.
         const product = new Product({ ...req.body, userId });
