@@ -19,8 +19,24 @@
   transition: background-color 0.3s;
 }
 
-.nav-ul li a:hover {
-  background-color: #d9534f; /* Darker red on hover */
+@media (max-width: 768px) {
+  .nav-ul {
+    text-align: center; /* Center align the navigation links */
+    padding: 0;
+  }
+
+  .nav-ul li {
+    display: block; /* Stack navigation links on top of each other */
+    margin: 0;
+    padding: 10px;
+  }
+
+  .nav-ul li a {
+    display: block; /* Make the navigation links take up the full width of the container */
+    text-align: center; /* Center align the text */
+  }
+
+  /* Add more styles as needed for mobile devices */
 }
 
 /* Footer */
