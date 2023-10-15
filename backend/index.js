@@ -119,22 +119,32 @@ app.put("/product/:id",verifyToken ,async (req, resp) => {
     resp.send(result)
 });
 
-app.get("/search/:key",verifyToken,async (req, resp) => {
-    let result = await Product.find({
-        "$or": [
-            {
-                name: { $regex: req.params.key }  
-            },
-            {
-                company: { $regex: req.params.key }
-            },
-            {
-                category: { $regex: req.params.key }
-            }
-        ]
-    });
-    resp.send(result);
+app.get("/search/:key", verifyToken, async (req, resp) => {
+    const key = req.params.key;
+    const userId = req.userId; // Get the user's ID from the middleware
+
+    try {
+        const products = await Product.find({
+            userId,
+            "$or": [
+                {
+                    name: { $regex: key }
+                },
+                {
+                    company: { $regex: key }
+                },
+                {
+                    category: { $regex: key }
+                }
+            ]
+        });
+        resp.send(products);
+    } catch (error) {
+        console.error("Error searching products:", error);
+        resp.status(500).json({ error: "Failed to search products" });
+    }
 });
+
 
 
 function verifyToken(req, resp, next) {
